@@ -64,7 +64,7 @@ def fetch_boe_bank_rate():
             # Sort by date
             data.sort(key=lambda x: x['date'])
 
-            print(f"  ✓ Found {len(data)} observations")
+            print(f"  [OK] Found {len(data)} observations")
             return {
                 'label': 'BOE Bank Rate',
                 'unit': '% p.a.',
@@ -72,7 +72,7 @@ def fetch_boe_bank_rate():
             }
 
         except Exception as e:
-            print(f"  ✗ Attempt {attempt + 1}/{RETRY_COUNT} failed: {e}")
+            print(f"  [ERROR] Attempt {attempt + 1}/{RETRY_COUNT} failed: {e}")
             if attempt < RETRY_COUNT - 1:
                 time.sleep(RETRY_DELAY)
             else:

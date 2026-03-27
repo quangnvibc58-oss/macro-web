@@ -106,7 +106,7 @@ def fetch_world_gold_spot(start_date=None):
         gold = yf.download('GC=F', start=start_date, progress=False)
 
         if gold.empty:
-            print("  ✗ No data returned")
+            print("  [ERROR] No data returned")
             return []
 
         # Use closing price
@@ -122,11 +122,11 @@ def fetch_world_gold_spot(start_date=None):
             except (ValueError, TypeError, AttributeError):
                 pass
 
-        print(f"  ✓ Found {len(data)} observations")
+        print(f"  [OK] Found {len(data)} observations")
         return sorted(data, key=lambda x: x['date'])
 
     except Exception as e:
-        print(f"  ✗ Error: {e}")
+        print(f"  [ERROR] Error: {e}")
         return []
 
 

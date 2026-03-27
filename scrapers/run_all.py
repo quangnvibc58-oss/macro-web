@@ -55,7 +55,7 @@ def save_json(data, filename):
     with open(filepath, 'w', encoding='utf-8') as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
 
-    print(f"  ✓ Saved to {filepath}")
+    print(f"  [OK] Saved to {filepath}")
     return filepath
 
 
@@ -97,7 +97,7 @@ def main():
         save_json(interest_rates, 'interest_rates.json')
         all_data['interest_rates'] = interest_rates
     except Exception as e:
-        print(f"  ✗ Error: {e}")
+        print(f"  [ERROR] Error: {e}")
 
     time.sleep(1)
 
@@ -117,7 +117,7 @@ def main():
         save_json(interest_rates, 'interest_rates.json')
         all_data['interest_rates'] = interest_rates
     except Exception as e:
-        print(f"  ✗ Error: {e}")
+        print(f"  [ERROR] Error: {e}")
 
     time.sleep(1)
 
@@ -137,7 +137,7 @@ def main():
         save_json(interest_rates, 'interest_rates.json')
         all_data['interest_rates'] = interest_rates
     except Exception as e:
-        print(f"  ✗ Error: {e}")
+        print(f"  [ERROR] Error: {e}")
 
     time.sleep(1)
 
@@ -157,7 +157,7 @@ def main():
         save_json(exchange_rates, 'exchange_rates.json')
         all_data['exchange_rates'] = exchange_rates
     except Exception as e:
-        print(f"  ✗ Error: {e}")
+        print(f"  [ERROR] Error: {e}")
 
     time.sleep(1)
 
@@ -200,7 +200,7 @@ def main():
             all_data['fuel_prices'] = fuel_prices
 
     except Exception as e:
-        print(f"  ✗ Error: {e}")
+        print(f"  [ERROR] Error: {e}")
 
     print("\n" + "=" * 60)
     print(f"Finished: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")

@@ -67,7 +67,7 @@ def import_csv_seed(csv_file, series_name, label, unit):
         # Sort by date
         data.sort(key=lambda x: x['date'])
 
-        print(f"  ✓ Imported {len(data)} rows from {csv_file}")
+        print(f"  [OK] Imported {len(data)} rows from {csv_file}")
 
         return {
             'label': label,
@@ -76,7 +76,7 @@ def import_csv_seed(csv_file, series_name, label, unit):
         }
 
     except Exception as e:
-        print(f"  ✗ Error reading {csv_file}: {e}")
+        print(f"  [ERROR] Error reading {csv_file}: {e}")
         return None
 
 
@@ -131,7 +131,7 @@ def save_json(data, filepath):
     Path(filepath).parent.mkdir(parents=True, exist_ok=True)
     with open(filepath, 'w', encoding='utf-8') as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
-    print(f"  ✓ Saved to {filepath}")
+    print(f"  [OK] Saved to {filepath}")
 
 
 def import_nhnn_refi_rate():
