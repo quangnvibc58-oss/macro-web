@@ -1,0 +1,12 @@
+{
+  "sjc_gold": {
+    "label": "SJC Gold Sell Price",
+    "unit": "Million VND per tael",
+    "data": []
+  },
+  "world_gold": {
+    "label": "World Gold Spot Price",
+    "unit": "USD/oz",
+    "data": []
+  }
+}

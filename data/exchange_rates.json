@@ -1,0 +1,17 @@
+{
+  "nhnn_rate": {
+    "label": "NHNN Official Exchange Rate (USD/VND)",
+    "unit": "VND/USD",
+    "data": []
+  },
+  "vietcombank_rate": {
+    "label": "Vietcombank Sell Rate (USD/VND)",
+    "unit": "VND/USD",
+    "data": []
+  },
+  "black_market_rate": {
+    "label": "Black Market Exchange Rate (USD/VND)",
+    "unit": "VND/USD",
+    "data": []
+  }
+}

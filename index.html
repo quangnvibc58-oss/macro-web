@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vietnam Macro Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏦 Vietnam Macro Dashboard</h1>
+            <p>Theo dõi các chỉ số kinh tế vĩ mô Việt Nam và thế giới</p>
+            <p class="last-update">Cập nhật lần cuối: <span id="lastUpdate">--</span></p>
+        </header>
+
+        <!-- Section 1: Interest Rates -->
+        <section class="section" id="interestRatesSection">
+            <div class="section-header">
+                <h2>📈 Lãi Suất</h2>
+            </div>
+            <div class="chart-container">
+                <canvas id="interestRatesChart"></canvas>
+            </div>
+        </section>
+
+        <!-- Section 2: Exchange Rates -->
+        <section class="section" id="exchangeRatesSection">
+            <div class="section-header">
+                <h2>💵 Tỷ Giá USD/VND</h2>
+            </div>
+            <div class="chart-container">
+                <canvas id="exchangeRatesChart"></canvas>
+            </div>
+        </section>
+
+        <!-- Section 3: Gold Prices -->
+        <section class="section" id="goldPricesSection">
+            <div class="section-header">
+                <h2>🥇 Giá Vàng</h2>
+            </div>
+            <div class="charts-row">
+                <div class="chart-container">
+                    <h3>SJC Gold</h3>
+                    <canvas id="sjcGoldChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>World Gold Spot</h3>
+                    <canvas id="worldGoldChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Fuel Prices -->
+        <section class="section" id="fuelPricesSection">
+            <div class="section-header">
+                <h2>⛽ Giá Nhiên Liệu</h2>
+            </div>
+            <div class="charts-row">
+                <div class="chart-container">
+                    <h3>RON95-III Việt Nam</h3>
+                    <canvas id="ron95Chart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>Brent Crude Oil</h3>
+                    <canvas id="brentChart"></canvas>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <footer>
+        <p>Data sources: FRED, BOJ, BOE, webgia.com, tygiausd.org, PVOIL, yfinance</p>
+        <p>Last updated: <span id="footerTime">--</span></p>
+    </footer>
+
+    <script src="charts.js"></script>
+</body>
+</html>

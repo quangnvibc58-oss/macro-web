@@ -1,0 +1,12 @@
+{
+  "ron95_iii": {
+    "label": "Vietnam RON95-III Gasoline Price",
+    "unit": "VND/liter",
+    "data": []
+  },
+  "brent_crude": {
+    "label": "Brent Crude Oil Price",
+    "unit": "$ per barrel",
+    "data": []
+  }
+}

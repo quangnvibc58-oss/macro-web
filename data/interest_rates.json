@@ -1,0 +1,22 @@
+{
+  "fed_funds": {
+    "label": "Fed Funds Effective Rate",
+    "unit": "% p.a.",
+    "data": []
+  },
+  "boj_rate": {
+    "label": "BOJ Overnight Call Rate",
+    "unit": "% p.a.",
+    "data": []
+  },
+  "boe_rate": {
+    "label": "BOE Bank Rate",
+    "unit": "% p.a.",
+    "data": []
+  },
+  "nhnn_refi_rate": {
+    "label": "NHNN Refinancing Rate",
+    "unit": "% p.a.",
+    "data": []
+  }
+}
