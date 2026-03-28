@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: Arial; margin: 20px; }
+        canvas { max-width: 800px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .ok { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h1>Test Dashboard</h1>
+    <div id="status"></div>
+    <canvas id="testChart"></canvas>
+
+    <script>
+        const statusEl = document.getElementById('status');
+
+        async function test() {
+            try {
+                // Test 1: Load JSON
+                const response = await fetch('./data/interest_rates.json');
+                const data = await response.json();
+                statusEl.innerHTML += `<div class="status ok">✓ JSON loaded: ${Object.keys(data).length} series</div>`;
+
+                // Test 2: Check data
+                const fedFunds = data.fed_funds.data;
+                statusEl.innerHTML += `<div class="status ok">✓ Fed Funds: ${fedFunds.length} data points</div>`;
+
+                // Test 3: Create simple chart
+                const ctx = document.getElementById('testChart').getContext('2d');
+                const chart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: fedFunds.slice(-50).map(d => d.date),
+                        datasets: [{
+                            label: 'Fed Funds Rate (last 50 months)',
+                            data: fedFunds.slice(-50).map(d => d.value),
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            borderWidth: 2,
+                            fill: false
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { display: true }
+                        },
+                        scales: {
+                            y: {
+                                title: { display: true, text: '% p.a.' }
+                            }
+                        }
+                    }
+                });
+                statusEl.innerHTML += `<div class="status ok">✓ Chart created successfully!</div>`;
+
+            } catch(error) {
+                statusEl.innerHTML += `<div class="status error">✗ Error: ${error.message}</div>`;
+                console.error(error);
+            }
+        }
+
+        test();
+    </script>
+</body>
+</html>

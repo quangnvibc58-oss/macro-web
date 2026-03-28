@@ -1,240 +1,263 @@
 /**
- * Simple Chart.js initialization and data loading
+ * Vietnam Macro Dashboard - Full Version
+ * Advanced Chart.js with multiple indicators
  */
 
 const COLORS = {
-    blue: '#3b82f6',
-    red: '#ef4444',
-    green: '#10b981',
-    yellow: '#f59e0b',
-    purple: '#8b5cf6',
-    pink: '#ec4899',
-    indigo: '#6366f1',
-    cyan: '#06b6d4'
+    fed: '#3b82f6',
+    boj: '#ef4444',
+    boe: '#10b981',
+    nhnn: '#f59e0b',
+    vietcombank: '#8b5cf6',
+    blackmarket: '#ec4899',
+    sjc: '#eab308',
+    worldgold: '#06b6d4',
+    ron95: '#f97316',
+    brent: '#6366f1'
 };
 
-const COLOR_ARRAY = Object.values(COLORS);
 let charts = {};
 
+// Load JSON data
 async function loadData(filename) {
     try {
-        const response = await fetch(`./data/${filename}`);
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        return await response.json();
+        const resp = await fetch(`./data/${filename}`);
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        return await resp.json();
     } catch (error) {
-        console.error(`Error loading ${filename}:`, error);
+        console.error(`Failed to load ${filename}:`, error);
         return {};
     }
 }
 
-function createSimpleChart(canvasId, datasets, options = {}) {
-    const ctx = document.getElementById(canvasId);
-    if (!ctx) {
-        console.error(`Canvas not found: ${canvasId}`);
+// Create professional chart
+function createChart(canvasId, title, datasets, yLabel) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) {
+        console.error(`Canvas ${canvasId} not found`);
         return null;
     }
 
     try {
-        const chart = new Chart(ctx, {
+        return new Chart(canvas, {
             type: 'line',
-            data: { datasets: datasets },
+            data: { datasets },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                interaction: { intersect: false, mode: 'index' },
+                interaction: { mode: 'index', intersect: false },
                 plugins: {
-                    legend: { display: true, position: 'top' },
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: { usePointStyle: true, padding: 15, font: { size: 11 } }
+                    },
                     tooltip: {
-                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        backgroundColor: 'rgba(0, 0, 0, 0.9)',
                         padding: 12,
-                        titleFont: { size: 13 },
-                        bodyFont: { size: 12 },
+                        titleFont: { size: 12 },
+                        bodyFont: { size: 11 },
+                        borderColor: 'rgba(255,255,255,0.2)',
+                        borderWidth: 1,
                         displayColors: true,
                         callbacks: {
-                            label: function(context) {
-                                let label = context.dataset.label || '';
-                                if (label) label += ': ';
-                                if (context.parsed.y !== null) {
-                                    label += context.parsed.y.toFixed(2);
-                                }
-                                if (context.dataset.unit) {
-                                    label += ' ' + context.dataset.unit;
-                                }
-                                return label;
+                            title: (ctx) => ctx[0]?.label || '',
+                            label: (ctx) => {
+                                let str = ctx.dataset.label + ': ' + ctx.parsed.y.toFixed(2);
+                                if (ctx.dataset.unit) str += ' ' + ctx.dataset.unit;
+                                return str;
                             }
                         }
                     }
                 },
                 scales: {
                     y: {
-                        title: {
-                            display: true,
-                            text: options.yAxisLabel || 'Value'
-                        }
-                    }
-                },
-                ...options
+                        title: { display: true, text: yLabel, font: { size: 11 } },
+                        grid: { color: 'rgba(0,0,0,0.05)' }
+                    },
+                    x: { grid: { color: 'rgba(0,0,0,0.05)' } }
+                }
             }
         });
-        return chart;
     } catch (error) {
-        console.error(`Error creating chart ${canvasId}:`, error);
+        console.error(`Chart error for ${canvasId}:`, error);
         return null;
     }
 }
 
-async function initInterestRatesChart() {
+// Initialize Interest Rates
+async function initInterestRates() {
     const data = await loadData('interest_rates.json');
-    console.log('Interest rates:', Object.keys(data));
-
     const datasets = [];
-    let colorIndex = 0;
+    const colors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b'];
+    let idx = 0;
 
     for (let key in data) {
-        if (data[key].data && data[key].data.length > 0) {
-            const last50 = data[key].data.slice(-50);
+        if (data[key].data?.length > 0) {
+            const last100 = data[key].data.slice(-100);
             datasets.push({
                 label: data[key].label,
-                data: last50.map(d => d.value),
-                borderColor: COLOR_ARRAY[colorIndex % COLOR_ARRAY.length],
-                backgroundColor: COLOR_ARRAY[colorIndex % COLOR_ARRAY.length] + '1a',
-                borderWidth: 2,
+                data: last100.map(d => d.value),
+                borderColor: colors[idx],
+                backgroundColor: colors[idx] + '15',
+                borderWidth: 2.5,
                 fill: false,
-                pointRadius: 1,
-                tension: 0.4,
+                tension: 0.3,
+                pointRadius: 1.5,
+                pointHoverRadius: 5,
                 unit: data[key].unit
             });
-            colorIndex++;
+            idx++;
         }
     }
 
     if (datasets.length > 0) {
-        charts.interestRates = createSimpleChart('interestRatesChart', datasets, {
-            yAxisLabel: '% p.a.'
-        });
+        charts.interest = createChart('interestRatesChart', 'Interest Rates', datasets, '% per annum');
     }
 }
 
-async function initExchangeRatesChart() {
+// Initialize Exchange Rates
+async function initExchangeRates() {
     const data = await loadData('exchange_rates.json');
-    console.log('Exchange rates:', Object.keys(data));
-
     const datasets = [];
-    let colorIndex = 0;
+    const colors = ['#06b6d4', '#8b5cf6', '#ec4899'];
+    let idx = 0;
 
     for (let key in data) {
-        if (data[key].data && data[key].data.length > 0) {
+        if (data[key].data?.length > 0) {
             datasets.push({
                 label: data[key].label,
                 data: data[key].data.map(d => d.value),
-                borderColor: COLOR_ARRAY[colorIndex % COLOR_ARRAY.length],
-                backgroundColor: COLOR_ARRAY[colorIndex % COLOR_ARRAY.length] + '1a',
-                borderWidth: 2,
+                borderColor: colors[idx],
+                backgroundColor: colors[idx] + '15',
+                borderWidth: 2.5,
                 fill: false,
+                tension: 0.3,
                 pointRadius: 1,
-                tension: 0.4,
+                pointHoverRadius: 5,
                 unit: data[key].unit
             });
-            colorIndex++;
+            idx++;
         }
     }
 
     if (datasets.length > 0) {
-        charts.exchangeRates = createSimpleChart('exchangeRatesChart', datasets, {
-            yAxisLabel: 'VND/USD'
-        });
+        charts.exchange = createChart('exchangeRatesChart', 'Exchange Rates', datasets, 'VND per USD');
     }
 }
 
-async function initGoldPricesCharts() {
+// Initialize Gold Prices
+async function initGoldPrices() {
     const data = await loadData('gold_prices.json');
 
     // SJC Gold
-    if (data.sjc_gold && data.sjc_gold.data && data.sjc_gold.data.length > 0) {
+    if (data.sjc_gold?.data?.length > 0) {
         const last50 = data.sjc_gold.data.slice(-50);
-        charts.sjcGold = createSimpleChart('sjcGoldChart', [{
+        charts.sjcGold = createChart('sjcGoldChart', 'SJC Gold', [{
             label: data.sjc_gold.label,
             data: last50.map(d => d.value),
-            borderColor: COLORS.yellow,
-            backgroundColor: COLORS.yellow + '1a',
-            borderWidth: 2,
+            borderColor: '#eab308',
+            backgroundColor: '#eab30815',
+            borderWidth: 2.5,
             fill: false,
-            tension: 0.4,
+            tension: 0.3,
             unit: data.sjc_gold.unit
-        }], { yAxisLabel: 'Million VND/tael' });
+        }], 'Million VND per tael');
     }
 
     // World Gold
-    if (data.world_gold && data.world_gold.data && data.world_gold.data.length > 0) {
+    if (data.world_gold?.data?.length > 0) {
         const last50 = data.world_gold.data.slice(-50);
-        charts.worldGold = createSimpleChart('worldGoldChart', [{
+        charts.worldGold = createChart('worldGoldChart', 'World Gold', [{
             label: data.world_gold.label,
             data: last50.map(d => d.value),
-            borderColor: COLORS.green,
-            backgroundColor: COLORS.green + '1a',
-            borderWidth: 2,
+            borderColor: '#06b6d4',
+            backgroundColor: '#06b6d415',
+            borderWidth: 2.5,
             fill: false,
-            tension: 0.4,
+            tension: 0.3,
             unit: data.world_gold.unit
-        }], { yAxisLabel: 'USD/oz' });
+        }], 'USD per troy oz');
     }
 }
 
-async function initFuelPricesCharts() {
+// Initialize Fuel Prices
+async function initFuelPrices() {
     const data = await loadData('fuel_prices.json');
 
-    // RON95
-    if (data.ron95_iii && data.ron95_iii.data && data.ron95_iii.data.length > 0) {
+    // RON95-III
+    if (data.ron95_iii?.data?.length > 0) {
         const last50 = data.ron95_iii.data.slice(-50);
-        charts.ron95 = createSimpleChart('ron95Chart', [{
+        charts.ron95 = createChart('ron95Chart', 'RON95-III', [{
             label: data.ron95_iii.label,
             data: last50.map(d => d.value),
-            borderColor: COLORS.red,
-            backgroundColor: COLORS.red + '1a',
-            borderWidth: 2,
+            borderColor: '#f97316',
+            backgroundColor: '#f9731615',
+            borderWidth: 2.5,
             fill: false,
-            tension: 0.4,
+            tension: 0.3,
             unit: data.ron95_iii.unit
-        }], { yAxisLabel: 'VND/liter' });
+        }], 'VND per liter');
     }
 
     // Brent Crude
-    if (data.brent_crude && data.brent_crude.data && data.brent_crude.data.length > 0) {
-        const last200 = data.brent_crude.data.slice(-200);
-        charts.brent = createSimpleChart('brentChart', [{
+    if (data.brent_crude?.data?.length > 0) {
+        const last100 = data.brent_crude.data.slice(-100);
+        charts.brent = createChart('brentChart', 'Brent Crude', [{
             label: data.brent_crude.label,
-            data: last200.map(d => d.value),
-            borderColor: COLORS.purple,
-            backgroundColor: COLORS.purple + '1a',
-            borderWidth: 2,
+            data: last100.map(d => d.value),
+            borderColor: '#6366f1',
+            backgroundColor: '#6366f115',
+            borderWidth: 2.5,
             fill: false,
-            tension: 0.4,
+            tension: 0.3,
             unit: data.brent_crude.unit
-        }], { yAxisLabel: '$/barrel' });
+        }], 'USD per barrel');
     }
 }
 
+// Update timestamp
 function updateTimestamp() {
     const now = new Date();
-    const timeString = now.toLocaleString('vi-VN');
-    document.getElementById('lastUpdate').textContent = timeString;
-    document.getElementById('footerTime').textContent = timeString;
+    const timeStr = now.toLocaleString('vi-VN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    });
+    document.getElementById('lastUpdate').textContent = timeStr;
+    document.getElementById('footerTime').textContent = timeStr;
 }
 
-async function initAllCharts() {
-    console.log('Initializing dashboard...');
+// Initialize all charts
+async function init() {
+    console.log('[Dashboard] Starting initialization...');
     updateTimestamp();
 
-    await initInterestRatesChart();
-    await initExchangeRatesChart();
-    await initGoldPricesCharts();
-    await initFuelPricesCharts();
+    console.log('[Dashboard] Loading interest rates...');
+    await initInterestRates();
 
-    console.log('Dashboard ready!');
+    console.log('[Dashboard] Loading exchange rates...');
+    await initExchangeRates();
+
+    console.log('[Dashboard] Loading gold prices...');
+    await initGoldPrices();
+
+    console.log('[Dashboard] Loading fuel prices...');
+    await initFuelPrices();
+
+    console.log('[Dashboard] Dashboard ready!');
+
+    // Show status
+    const loaded = Object.keys(charts).length;
+    console.log(`[Dashboard] ${loaded} charts initialized`);
 }
 
+// Run on page load
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initAllCharts);
+    document.addEventListener('DOMContentLoaded', init);
 } else {
-    initAllCharts();
+    init();
 }

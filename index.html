@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vietnam Macro Dashboard</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -13,39 +13,40 @@
             <h1>🏦 Vietnam Macro Dashboard</h1>
             <p>Theo dõi các chỉ số kinh tế vĩ mô Việt Nam và thế giới</p>
             <p class="last-update">Cập nhật lần cuối: <span id="lastUpdate">--</span></p>
+            <div id="loadStatus" style="padding: 10px; margin-top: 10px; border-radius: 5px; font-size: 12px;"></div>
         </header>
 
         <!-- Section 1: Interest Rates -->
-        <section class="section" id="interestRatesSection">
+        <section class="section">
             <div class="section-header">
                 <h2>📈 Lãi Suất</h2>
             </div>
-            <div class="chart-container">
+            <div class="chart-container" style="height: 400px;">
                 <canvas id="interestRatesChart"></canvas>
             </div>
         </section>
 
         <!-- Section 2: Exchange Rates -->
-        <section class="section" id="exchangeRatesSection">
+        <section class="section">
             <div class="section-header">
                 <h2>💵 Tỷ Giá USD/VND</h2>
             </div>
-            <div class="chart-container">
+            <div class="chart-container" style="height: 400px;">
                 <canvas id="exchangeRatesChart"></canvas>
             </div>
         </section>
 
         <!-- Section 3: Gold Prices -->
-        <section class="section" id="goldPricesSection">
+        <section class="section">
             <div class="section-header">
                 <h2>🥇 Giá Vàng</h2>
             </div>
             <div class="charts-row">
-                <div class="chart-container">
+                <div class="chart-container" style="height: 350px;">
                     <h3>SJC Gold</h3>
                     <canvas id="sjcGoldChart"></canvas>
                 </div>
-                <div class="chart-container">
+                <div class="chart-container" style="height: 350px;">
                     <h3>World Gold Spot</h3>
                     <canvas id="worldGoldChart"></canvas>
                 </div>
@@ -53,16 +54,16 @@
         </section>
 
         <!-- Section 4: Fuel Prices -->
-        <section class="section" id="fuelPricesSection">
+        <section class="section">
             <div class="section-header">
                 <h2>⛽ Giá Nhiên Liệu</h2>
             </div>
             <div class="charts-row">
-                <div class="chart-container">
+                <div class="chart-container" style="height: 350px;">
                     <h3>RON95-III Việt Nam</h3>
                     <canvas id="ron95Chart"></canvas>
                 </div>
-                <div class="chart-container">
+                <div class="chart-container" style="height: 350px;">
                     <h3>Brent Crude Oil</h3>
                     <canvas id="brentChart"></canvas>
                 </div>
@@ -75,6 +76,205 @@
         <p>Last updated: <span id="footerTime">--</span></p>
     </footer>
 
-    <script src="charts.js"></script>
+    <script>
+        const COLORS = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#eab308', '#06b6d4'];
+        let chartInstances = {};
+
+        const statusEl = document.getElementById('loadStatus');
+
+        function updateStatus(msg, isError = false) {
+            console.log(msg);
+            const style = isError ? 'background: #fee; color: #c33; border: 1px solid #fcc;' : 'background: #d4edda; color: #155724; border: 1px solid #c3e6cb;';
+            statusEl.innerHTML += `<div style="${style} padding: 8px; margin: 5px 0; border-radius: 4px;">${msg}</div>`;
+        }
+
+        async function loadJSON(filename) {
+            try {
+                const resp = await fetch(`./data/${filename}`);
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                const data = await resp.json();
+                updateStatus(`✓ Loaded ${filename}: ${Object.keys(data).length} series`);
+                return data;
+            } catch (error) {
+                updateStatus(`✗ Failed to load ${filename}: ${error.message}`, true);
+                return {};
+            }
+        }
+
+        function createChart(canvasId, datasets, yLabel) {
+            try {
+                const ctx = document.getElementById(canvasId).getContext('2d');
+                const chart = new Chart(ctx, {
+                    type: 'line',
+                    data: { datasets },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: { mode: 'index', intersect: false },
+                        plugins: {
+                            legend: { display: true, position: 'top', labels: { usePointStyle: true, padding: 15 } },
+                            tooltip: {
+                                backgroundColor: 'rgba(0,0,0,0.8)',
+                                padding: 12,
+                                displayColors: true,
+                                callbacks: {
+                                    label: (ctx) => {
+                                        let str = (ctx.dataset.label || '') + ': ' + ctx.parsed.y.toFixed(2);
+                                        if (ctx.dataset.unit) str += ' ' + ctx.dataset.unit;
+                                        return str;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                title: { display: true, text: yLabel },
+                                grid: { color: 'rgba(0,0,0,0.05)' }
+                            }
+                        }
+                    }
+                });
+                return chart;
+            } catch (error) {
+                updateStatus(`✗ Chart error for ${canvasId}: ${error.message}`, true);
+                return null;
+            }
+        }
+
+        async function initCharts() {
+            updateStatus('Starting dashboard initialization...');
+
+            // Interest Rates
+            const interestData = await loadJSON('interest_rates.json');
+            if (Object.keys(interestData).length > 0) {
+                const datasets = [];
+                let idx = 0;
+                for (let key in interestData) {
+                    if (interestData[key].data?.length > 0) {
+                        const last100 = interestData[key].data.slice(-100);
+                        datasets.push({
+                            label: interestData[key].label,
+                            data: last100.map(d => d.value),
+                            borderColor: COLORS[idx % COLORS.length],
+                            backgroundColor: COLORS[idx % COLORS.length] + '15',
+                            borderWidth: 2,
+                            fill: false,
+                            tension: 0.3,
+                            pointRadius: 1,
+                            unit: interestData[key].unit
+                        });
+                        idx++;
+                    }
+                }
+                if (datasets.length > 0) {
+                    chartInstances.interest = createChart('interestRatesChart', datasets, '% per annum');
+                    updateStatus(`✓ Interest Rates chart created (${datasets.length} series)`);
+                }
+            }
+
+            // Exchange Rates
+            const exData = await loadJSON('exchange_rates.json');
+            if (Object.keys(exData).length > 0) {
+                const datasets = [];
+                let idx = 0;
+                for (let key in exData) {
+                    if (exData[key].data?.length > 0) {
+                        datasets.push({
+                            label: exData[key].label,
+                            data: exData[key].data.map(d => d.value),
+                            borderColor: COLORS[idx % COLORS.length],
+                            backgroundColor: COLORS[idx % COLORS.length] + '15',
+                            borderWidth: 2,
+                            fill: false,
+                            tension: 0.3,
+                            pointRadius: 1,
+                            unit: exData[key].unit
+                        });
+                        idx++;
+                    }
+                }
+                if (datasets.length > 0) {
+                    chartInstances.exchange = createChart('exchangeRatesChart', datasets, 'VND per USD');
+                    updateStatus(`✓ Exchange Rates chart created (${datasets.length} series)`);
+                }
+            }
+
+            // Gold Prices
+            const goldData = await loadJSON('gold_prices.json');
+            if (goldData.sjc_gold?.data?.length > 0) {
+                const last50 = goldData.sjc_gold.data.slice(-50);
+                chartInstances.sjc = createChart('sjcGoldChart', [{
+                    label: goldData.sjc_gold.label,
+                    data: last50.map(d => d.value),
+                    borderColor: '#eab308',
+                    backgroundColor: '#eab30815',
+                    borderWidth: 2,
+                    fill: false,
+                    tension: 0.3,
+                    unit: goldData.sjc_gold.unit
+                }], 'Million VND/tael');
+                updateStatus(`✓ SJC Gold chart created`);
+            }
+            if (goldData.world_gold?.data?.length > 0) {
+                const last50 = goldData.world_gold.data.slice(-50);
+                chartInstances.worldGold = createChart('worldGoldChart', [{
+                    label: goldData.world_gold.label,
+                    data: last50.map(d => d.value),
+                    borderColor: '#06b6d4',
+                    backgroundColor: '#06b6d415',
+                    borderWidth: 2,
+                    fill: false,
+                    tension: 0.3,
+                    unit: goldData.world_gold.unit
+                }], 'USD/oz');
+                updateStatus(`✓ World Gold chart created`);
+            }
+
+            // Fuel Prices
+            const fuelData = await loadJSON('fuel_prices.json');
+            if (fuelData.ron95_iii?.data?.length > 0) {
+                const last50 = fuelData.ron95_iii.data.slice(-50);
+                chartInstances.ron95 = createChart('ron95Chart', [{
+                    label: fuelData.ron95_iii.label,
+                    data: last50.map(d => d.value),
+                    borderColor: '#f97316',
+                    backgroundColor: '#f9731615',
+                    borderWidth: 2,
+                    fill: false,
+                    tension: 0.3,
+                    unit: fuelData.ron95_iii.unit
+                }], 'VND/liter');
+                updateStatus(`✓ RON95-III chart created`);
+            }
+            if (fuelData.brent_crude?.data?.length > 0) {
+                const last100 = fuelData.brent_crude.data.slice(-100);
+                chartInstances.brent = createChart('brentChart', [{
+                    label: fuelData.brent_crude.label,
+                    data: last100.map(d => d.value),
+                    borderColor: '#6366f1',
+                    backgroundColor: '#6366f115',
+                    borderWidth: 2,
+                    fill: false,
+                    tension: 0.3,
+                    unit: fuelData.brent_crude.unit
+                }], 'USD/barrel');
+                updateStatus(`✓ Brent Crude chart created`);
+            }
+
+            // Update timestamp
+            const now = new Date();
+            document.getElementById('lastUpdate').textContent = now.toLocaleString('vi-VN');
+            document.getElementById('footerTime').textContent = now.toLocaleString('vi-VN');
+
+            updateStatus(`✓ Dashboard ready! ${Object.keys(chartInstances).length} charts loaded`);
+        }
+
+        // Initialize on page load
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initCharts);
+        } else {
+            initCharts();
+        }
+    </script>
 </body>
 </html>
