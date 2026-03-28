@@ -4,24 +4,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vietnam Macro Dashboard</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>🏦 Vietnam Macro Dashboard</h1>
+            <h1>📊 Vietnam Macro Dashboard</h1>
             <p>Theo dõi các chỉ số kinh tế vĩ mô Việt Nam và thế giới</p>
             <p class="last-update">Cập nhật lần cuối: <span id="lastUpdate">--</span></p>
-            <div id="loadStatus" style="padding: 10px; margin-top: 10px; border-radius: 5px; font-size: 12px;"></div>
+            <div id="loadStatus" style="font-size: 12px;"></div>
         </header>
 
         <!-- Section 1: Interest Rates -->
         <section class="section">
             <div class="section-header">
                 <h2>📈 Lãi Suất</h2>
+                <div class="time-filter" data-chart="interest">
+                    <button data-period="day">Ngày</button>
+                    <button data-period="week">Tuần</button>
+                    <button data-period="month" class="active">Tháng</button>
+                    <button data-period="year">Năm</button>
+                </div>
             </div>
-            <div class="chart-container" style="height: 400px;">
+            <div class="chart-container" style="height: 420px;">
                 <canvas id="interestRatesChart"></canvas>
             </div>
         </section>
@@ -30,8 +36,14 @@
         <section class="section">
             <div class="section-header">
                 <h2>💵 Tỷ Giá USD/VND</h2>
+                <div class="time-filter" data-chart="exchange">
+                    <button data-period="day">Ngày</button>
+                    <button data-period="week">Tuần</button>
+                    <button data-period="month" class="active">Tháng</button>
+                    <button data-period="year">Năm</button>
+                </div>
             </div>
-            <div class="chart-container" style="height: 400px;">
+            <div class="chart-container" style="height: 420px;">
                 <canvas id="exchangeRatesChart"></canvas>
             </div>
         </section>
@@ -42,12 +54,28 @@
                 <h2>🥇 Giá Vàng</h2>
             </div>
             <div class="charts-row">
-                <div class="chart-container" style="height: 350px;">
-                    <h3>SJC Gold</h3>
+                <div class="chart-container">
+                    <div class="chart-inner-header">
+                        <h3>SJC Gold</h3>
+                        <div class="time-filter" data-chart="sjc">
+                            <button data-period="day">Ngày</button>
+                            <button data-period="week">Tuần</button>
+                            <button data-period="month" class="active">Tháng</button>
+                            <button data-period="year">Năm</button>
+                        </div>
+                    </div>
                     <canvas id="sjcGoldChart"></canvas>
                 </div>
-                <div class="chart-container" style="height: 350px;">
-                    <h3>World Gold Spot</h3>
+                <div class="chart-container">
+                    <div class="chart-inner-header">
+                        <h3>World Gold Spot</h3>
+                        <div class="time-filter" data-chart="worldGold">
+                            <button data-period="day">Ngày</button>
+                            <button data-period="week">Tuần</button>
+                            <button data-period="month" class="active">Tháng</button>
+                            <button data-period="year">Năm</button>
+                        </div>
+                    </div>
                     <canvas id="worldGoldChart"></canvas>
                 </div>
             </div>
@@ -59,12 +87,28 @@
                 <h2>⛽ Giá Nhiên Liệu</h2>
             </div>
             <div class="charts-row">
-                <div class="chart-container" style="height: 350px;">
-                    <h3>RON95-III Việt Nam</h3>
+                <div class="chart-container">
+                    <div class="chart-inner-header">
+                        <h3>RON95-III Việt Nam</h3>
+                        <div class="time-filter" data-chart="ron95">
+                            <button data-period="day">Ngày</button>
+                            <button data-period="week">Tuần</button>
+                            <button data-period="month" class="active">Tháng</button>
+                            <button data-period="year">Năm</button>
+                        </div>
+                    </div>
                     <canvas id="ron95Chart"></canvas>
                 </div>
-                <div class="chart-container" style="height: 350px;">
-                    <h3>Brent Crude Oil</h3>
+                <div class="chart-container">
+                    <div class="chart-inner-header">
+                        <h3>Brent Crude Oil</h3>
+                        <div class="time-filter" data-chart="brent">
+                            <button data-period="day">Ngày</button>
+                            <button data-period="week">Tuần</button>
+                            <button data-period="month" class="active">Tháng</button>
+                            <button data-period="year">Năm</button>
+                        </div>
+                    </div>
                     <canvas id="brentChart"></canvas>
                 </div>
             </div>
@@ -77,15 +121,26 @@
     </footer>
 
     <script>
-        const COLORS = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#eab308', '#06b6d4'];
-        let chartInstances = {};
+        const COLORS = {
+            fed: '#3b82f6', boj: '#ef4444', boe: '#10b981', nhnn: '#f59e0b',
+            vietcombank: '#8b5cf6', blackmarket: '#ec4899',
+            sjc: '#eab308', worldgold: '#06b6d4',
+            ron95: '#f97316', brent: '#6366f1'
+        };
 
+        const chartInstances = {};
+        const rawDataStore = {};
         const statusEl = document.getElementById('loadStatus');
+
+        // Period configuration (in days)
+        const PERIOD_DAYS = { day: 180, week: 180 * 7, month: 120 * 30, year: Infinity };
 
         function updateStatus(msg, isError = false) {
             console.log(msg);
-            const style = isError ? 'background: #fee; color: #c33; border: 1px solid #fcc;' : 'background: #d4edda; color: #155724; border: 1px solid #c3e6cb;';
-            statusEl.innerHTML += `<div style="${style} padding: 8px; margin: 5px 0; border-radius: 4px;">${msg}</div>`;
+            const style = isError
+                ? 'background: #fee; color: #c33; border: 1px solid #fcc;'
+                : 'background: #d4edda; color: #155724; border: 1px solid #c3e6cb;';
+            statusEl.innerHTML += `<div style="${style} padding: 8px; margin: 4px 0; border-radius: 4px; font-size: 12px;">${msg}</div>`;
         }
 
         async function loadJSON(filename) {
@@ -93,188 +148,298 @@
                 const resp = await fetch(`./data/${filename}`);
                 if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
                 const data = await resp.json();
-                updateStatus(`✓ Loaded ${filename}: ${Object.keys(data).length} series`);
+                updateStatus(`[OK] Loaded ${filename}: ${Object.keys(data).length} series`);
                 return data;
             } catch (error) {
-                updateStatus(`✗ Failed to load ${filename}: ${error.message}`, true);
+                updateStatus(`[ERROR] Failed to load ${filename}: ${error.message}`, true);
                 return {};
             }
         }
 
-        function createChart(canvasId, datasets, yLabel) {
+        function filterByPeriod(dataArray, period) {
+            if (period === 'year') return dataArray;
+
+            const cutoffDate = new Date();
+            cutoffDate.setDate(cutoffDate.getDate() - PERIOD_DAYS[period]);
+
+            return dataArray.filter(item => {
+                const itemDate = new Date(item.date);
+                return itemDate >= cutoffDate;
+            });
+        }
+
+        function makeGradient(ctx, color, height = 420) {
+            const gradient = ctx.createLinearGradient(0, 0, 0, height);
+            gradient.addColorStop(0, color + '30');
+            gradient.addColorStop(1, color + '00');
+            return gradient;
+        }
+
+        function createChart(canvasId, seriesList, yLabel) {
             try {
-                const ctx = document.getElementById(canvasId).getContext('2d');
-                // Extract dates from first dataset for X-axis labels
-                const labels = datasets.length > 0 && datasets[0].dates ? datasets[0].dates : [];
-                const chart = new Chart(ctx, {
+                const canvas = document.getElementById(canvasId);
+                if (!canvas) {
+                    updateStatus(`[ERROR] Canvas ${canvasId} not found`, true);
+                    return null;
+                }
+
+                const ctx = canvas.getContext('2d');
+                const chartHeight = canvas.parentElement.offsetHeight || 420;
+
+                const datasets = seriesList.map(s => ({
+                    label: s.label,
+                    data: s.data.map(d => d.value),
+                    borderColor: s.color,
+                    backgroundColor: makeGradient(ctx, s.color, chartHeight),
+                    borderWidth: 2.5,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 0,
+                    pointHoverRadius: 6,
+                    pointHoverBackgroundColor: s.color,
+                    pointHoverBorderWidth: 2,
+                    pointHoverBorderColor: 'white',
+                    unit: s.unit
+                }));
+
+                const labels = seriesList[0]?.data.map(d => d.date) ?? [];
+
+                return new Chart(ctx, {
                     type: 'line',
                     data: { labels, datasets },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
+                        animation: { duration: 400 },
                         interaction: { mode: 'index', intersect: false },
                         plugins: {
-                            legend: { display: true, position: 'top', labels: { usePointStyle: true, padding: 15 } },
+                            legend: {
+                                display: true,
+                                position: 'top',
+                                labels: {
+                                    usePointStyle: true,
+                                    pointStyle: 'circle',
+                                    padding: 16,
+                                    font: { size: 12, weight: '500' },
+                                    color: 'var(--text-color)'
+                                }
+                            },
                             tooltip: {
-                                backgroundColor: 'rgba(0,0,0,0.8)',
-                                padding: 12,
+                                backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                                titleColor: '#fff',
+                                bodyColor: '#fff',
+                                borderColor: 'rgba(255, 255, 255, 0.1)',
+                                borderWidth: 1,
+                                padding: 14,
+                                titleFont: { size: 13, weight: 'bold' },
+                                bodyFont: { size: 12 },
                                 displayColors: true,
                                 callbacks: {
                                     label: (ctx) => {
-                                        let str = (ctx.dataset.label || '') + ': ' + ctx.parsed.y.toFixed(2);
-                                        if (ctx.dataset.unit) str += ' ' + ctx.dataset.unit;
+                                        let str = `  ${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)}`;
+                                        if (ctx.dataset.unit) str += ` ${ctx.dataset.unit}`;
                                         return str;
                                     }
                                 }
                             }
                         },
                         scales: {
+                            x: {
+                                grid: { color: 'rgba(0, 0, 0, 0.04)' },
+                                ticks: { maxTicksLimit: 8, font: { size: 11 } }
+                            },
                             y: {
-                                title: { display: true, text: yLabel },
-                                grid: { color: 'rgba(0,0,0,0.05)' }
+                                title: { display: true, text: yLabel, font: { size: 12, weight: '600' } },
+                                grid: { color: 'rgba(0, 0, 0, 0.04)' },
+                                ticks: { font: { size: 11 } }
                             }
                         }
                     }
                 });
-                return chart;
             } catch (error) {
-                updateStatus(`✗ Chart error for ${canvasId}: ${error.message}`, true);
+                updateStatus(`[ERROR] Chart error for ${canvasId}: ${error.message}`, true);
                 return null;
             }
         }
 
+        function updateChartData(chartKey, period) {
+            const rawSeries = rawDataStore[chartKey];
+            if (!rawSeries || !chartInstances[chartKey]) return;
+
+            const filteredSeries = rawSeries.map(s => ({
+                ...s,
+                data: filterByPeriod(s.data, period)
+            }));
+
+            const instance = chartInstances[chartKey];
+            const labels = filteredSeries[0]?.data.map(d => d.date) ?? [];
+
+            instance.data.labels = labels;
+            instance.data.datasets.forEach((ds, i) => {
+                if (filteredSeries[i]) {
+                    ds.data = filteredSeries[i].data.map(d => d.value);
+                }
+            });
+
+            instance.update('active');
+        }
+
+        function setupTimeFilters() {
+            document.querySelectorAll('.time-filter').forEach(filterGroup => {
+                const chartKey = filterGroup.dataset.chart;
+
+                filterGroup.addEventListener('click', (e) => {
+                    if (e.target.tagName !== 'BUTTON') return;
+
+                    filterGroup.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+                    e.target.classList.add('active');
+
+                    const period = e.target.dataset.period;
+                    updateChartData(chartKey, period);
+                });
+            });
+        }
+
         async function initCharts() {
-            updateStatus('Starting dashboard initialization...');
+            updateStatus('Dashboard initializing...');
 
             // Interest Rates
             const interestData = await loadJSON('interest_rates.json');
             if (Object.keys(interestData).length > 0) {
-                const datasets = [];
+                const seriesList = [];
+                const colorOrder = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b'];
                 let idx = 0;
+
                 for (let key in interestData) {
                     if (interestData[key].data?.length > 0) {
-                        const last100 = interestData[key].data.slice(-100);
-                        datasets.push({
+                        seriesList.push({
                             label: interestData[key].label,
-                            data: last100.map(d => d.value),
-                            dates: last100.map(d => d.date),
-                            borderColor: COLORS[idx % COLORS.length],
-                            backgroundColor: COLORS[idx % COLORS.length] + '15',
-                            borderWidth: 2,
-                            fill: false,
-                            tension: 0.3,
-                            pointRadius: 1,
+                            data: interestData[key].data,
+                            color: colorOrder[idx % colorOrder.length],
                             unit: interestData[key].unit
                         });
                         idx++;
                     }
                 }
-                if (datasets.length > 0) {
-                    chartInstances.interest = createChart('interestRatesChart', datasets, '% per annum');
-                    updateStatus(`✓ Interest Rates chart created (${datasets.length} series)`);
+
+                if (seriesList.length > 0) {
+                    rawDataStore.interest = seriesList;
+                    const filtered = seriesList.map(s => ({
+                        ...s,
+                        data: filterByPeriod(s.data, 'month')
+                    }));
+                    chartInstances.interest = createChart('interestRatesChart', filtered, '% per annum');
+                    updateStatus(`[OK] Interest Rates created (${seriesList.length} series)`);
                 }
             }
 
             // Exchange Rates
             const exData = await loadJSON('exchange_rates.json');
             if (Object.keys(exData).length > 0) {
-                const datasets = [];
+                const seriesList = [];
+                const colorOrder = ['#06b6d4', '#8b5cf6', '#ec4899'];
                 let idx = 0;
+
                 for (let key in exData) {
                     if (exData[key].data?.length > 0) {
-                        datasets.push({
+                        seriesList.push({
                             label: exData[key].label,
-                            data: exData[key].data.map(d => d.value),
-                            dates: exData[key].data.map(d => d.date),
-                            borderColor: COLORS[idx % COLORS.length],
-                            backgroundColor: COLORS[idx % COLORS.length] + '15',
-                            borderWidth: 2,
-                            fill: false,
-                            tension: 0.3,
-                            pointRadius: 1,
+                            data: exData[key].data,
+                            color: colorOrder[idx % colorOrder.length],
                             unit: exData[key].unit
                         });
                         idx++;
                     }
                 }
-                if (datasets.length > 0) {
-                    chartInstances.exchange = createChart('exchangeRatesChart', datasets, 'VND per USD');
-                    updateStatus(`✓ Exchange Rates chart created (${datasets.length} series)`);
+
+                if (seriesList.length > 0) {
+                    rawDataStore.exchange = seriesList;
+                    const filtered = seriesList.map(s => ({
+                        ...s,
+                        data: filterByPeriod(s.data, 'month')
+                    }));
+                    chartInstances.exchange = createChart('exchangeRatesChart', filtered, 'VND per USD');
+                    updateStatus(`[OK] Exchange Rates created (${seriesList.length} series)`);
                 }
             }
 
             // Gold Prices
             const goldData = await loadJSON('gold_prices.json');
             if (goldData.sjc_gold?.data?.length > 0) {
-                const last50 = goldData.sjc_gold.data.slice(-50);
-                chartInstances.sjc = createChart('sjcGoldChart', [{
+                const seriesList = [{
                     label: goldData.sjc_gold.label,
-                    data: last50.map(d => d.value),
-                    dates: last50.map(d => d.date),
-                    borderColor: '#eab308',
-                    backgroundColor: '#eab30815',
-                    borderWidth: 2,
-                    fill: false,
-                    tension: 0.3,
+                    data: goldData.sjc_gold.data,
+                    color: COLORS.sjc,
                     unit: goldData.sjc_gold.unit
-                }], 'Million VND/tael');
-                updateStatus(`✓ SJC Gold chart created`);
+                }];
+                rawDataStore.sjc = seriesList;
+                const filtered = seriesList.map(s => ({
+                    ...s,
+                    data: filterByPeriod(s.data, 'month')
+                }));
+                chartInstances.sjc = createChart('sjcGoldChart', filtered, 'Million VND/tael');
+                updateStatus(`[OK] SJC Gold created`);
             }
+
             if (goldData.world_gold?.data?.length > 0) {
-                const last50 = goldData.world_gold.data.slice(-50);
-                chartInstances.worldGold = createChart('worldGoldChart', [{
+                const seriesList = [{
                     label: goldData.world_gold.label,
-                    data: last50.map(d => d.value),
-                    dates: last50.map(d => d.date),
-                    borderColor: '#06b6d4',
-                    backgroundColor: '#06b6d415',
-                    borderWidth: 2,
-                    fill: false,
-                    tension: 0.3,
+                    data: goldData.world_gold.data,
+                    color: COLORS.worldgold,
                     unit: goldData.world_gold.unit
-                }], 'USD/oz');
-                updateStatus(`✓ World Gold chart created`);
+                }];
+                rawDataStore.worldGold = seriesList;
+                const filtered = seriesList.map(s => ({
+                    ...s,
+                    data: filterByPeriod(s.data, 'month')
+                }));
+                chartInstances.worldGold = createChart('worldGoldChart', filtered, 'USD/oz');
+                updateStatus(`[OK] World Gold created`);
             }
 
             // Fuel Prices
             const fuelData = await loadJSON('fuel_prices.json');
             if (fuelData.ron95_iii?.data?.length > 0) {
-                const last50 = fuelData.ron95_iii.data.slice(-50);
-                chartInstances.ron95 = createChart('ron95Chart', [{
+                const seriesList = [{
                     label: fuelData.ron95_iii.label,
-                    data: last50.map(d => d.value),
-                    dates: last50.map(d => d.date),
-                    borderColor: '#f97316',
-                    backgroundColor: '#f9731615',
-                    borderWidth: 2,
-                    fill: false,
-                    tension: 0.3,
+                    data: fuelData.ron95_iii.data,
+                    color: COLORS.ron95,
                     unit: fuelData.ron95_iii.unit
-                }], 'VND/liter');
-                updateStatus(`✓ RON95-III chart created`);
-            }
-            if (fuelData.brent_crude?.data?.length > 0) {
-                const last100 = fuelData.brent_crude.data.slice(-100);
-                chartInstances.brent = createChart('brentChart', [{
-                    label: fuelData.brent_crude.label,
-                    data: last100.map(d => d.value),
-                    dates: last100.map(d => d.date),
-                    borderColor: '#6366f1',
-                    backgroundColor: '#6366f115',
-                    borderWidth: 2,
-                    fill: false,
-                    tension: 0.3,
-                    unit: fuelData.brent_crude.unit
-                }], 'USD/barrel');
-                updateStatus(`✓ Brent Crude chart created`);
+                }];
+                rawDataStore.ron95 = seriesList;
+                const filtered = seriesList.map(s => ({
+                    ...s,
+                    data: filterByPeriod(s.data, 'month')
+                }));
+                chartInstances.ron95 = createChart('ron95Chart', filtered, 'VND/liter');
+                updateStatus(`[OK] RON95-III created`);
             }
 
-            // Update timestamp
+            if (fuelData.brent_crude?.data?.length > 0) {
+                const seriesList = [{
+                    label: fuelData.brent_crude.label,
+                    data: fuelData.brent_crude.data,
+                    color: COLORS.brent,
+                    unit: fuelData.brent_crude.unit
+                }];
+                rawDataStore.brent = seriesList;
+                const filtered = seriesList.map(s => ({
+                    ...s,
+                    data: filterByPeriod(s.data, 'month')
+                }));
+                chartInstances.brent = createChart('brentChart', filtered, 'USD/barrel');
+                updateStatus(`[OK] Brent Crude created`);
+            }
+
+            // Update timestamps
             const now = new Date();
             document.getElementById('lastUpdate').textContent = now.toLocaleString('vi-VN');
             document.getElementById('footerTime').textContent = now.toLocaleString('vi-VN');
 
-            updateStatus(`✓ Dashboard ready! ${Object.keys(chartInstances).length} charts loaded`);
+            // Setup time filter event listeners
+            setupTimeFilters();
+
+            updateStatus(`[OK] Dashboard ready! ${Object.keys(chartInstances).length} charts loaded`);
         }
 
         // Initialize on page load
