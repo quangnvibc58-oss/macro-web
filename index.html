@@ -10,16 +10,15 @@
 <body>
     <div class="container">
         <header>
-            <h1>📊 Vietnam Macro Dashboard</h1>
+            <h1>Vietnam Macro Dashboard</h1>
             <p>Theo dõi các chỉ số kinh tế vĩ mô Việt Nam và thế giới</p>
-            <p class="last-update">Cập nhật lần cuối: <span id="lastUpdate">--</span></p>
-            <div id="loadStatus" style="font-size: 12px;"></div>
+            <p class="last-update">Cập nhật: <span id="lastUpdate">--</span></p>
         </header>
 
         <!-- Section 1: Interest Rates -->
         <section class="section">
             <div class="section-header">
-                <h2>📈 Lãi Suất</h2>
+                <h2>Lãi Suất</h2>
                 <div class="time-filter" data-chart="interest">
                     <button data-period="day">Ngày</button>
                     <button data-period="week">Tuần</button>
@@ -27,15 +26,15 @@
                     <button data-period="year">Năm</button>
                 </div>
             </div>
-            <div class="chart-container" style="height: 420px;">
-                <canvas id="interestRatesChart"></canvas>
+            <div class="chart-container">
+                <canvas id="interestRatesChart" style="display: block; width: 100%; height: 360px !important;"></canvas>
             </div>
         </section>
 
         <!-- Section 2: Exchange Rates -->
         <section class="section">
             <div class="section-header">
-                <h2>💵 Tỷ Giá USD/VND</h2>
+                <h2>Tỷ Giá USD/VND</h2>
                 <div class="time-filter" data-chart="exchange">
                     <button data-period="day">Ngày</button>
                     <button data-period="week">Tuần</button>
@@ -43,18 +42,18 @@
                     <button data-period="year">Năm</button>
                 </div>
             </div>
-            <div class="chart-container" style="height: 420px;">
-                <canvas id="exchangeRatesChart"></canvas>
+            <div class="chart-container">
+                <canvas id="exchangeRatesChart" style="display: block; width: 100%; height: 360px !important;"></canvas>
             </div>
         </section>
 
         <!-- Section 3: Gold Prices -->
         <section class="section">
             <div class="section-header">
-                <h2>🥇 Giá Vàng</h2>
+                <h2>Giá Vàng</h2>
             </div>
             <div class="charts-row">
-                <div class="chart-container" style="position: relative; height: 420px;">
+                <div class="chart-container">
                     <div class="chart-inner-header">
                         <h3>SJC Gold</h3>
                         <div class="time-filter" data-chart="sjc">
@@ -66,7 +65,7 @@
                     </div>
                     <canvas id="sjcGoldChart" style="display: block; width: 100%; height: 360px !important;"></canvas>
                 </div>
-                <div class="chart-container" style="position: relative; height: 420px;">
+                <div class="chart-container">
                     <div class="chart-inner-header">
                         <h3>World Gold Spot</h3>
                         <div class="time-filter" data-chart="worldGold">
@@ -84,10 +83,10 @@
         <!-- Section 4: Fuel Prices -->
         <section class="section">
             <div class="section-header">
-                <h2>⛽ Giá Nhiên Liệu</h2>
+                <h2>Giá Nhiên Liệu</h2>
             </div>
             <div class="charts-row">
-                <div class="chart-container" style="position: relative; height: 420px;">
+                <div class="chart-container">
                     <div class="chart-inner-header">
                         <h3>RON95-III Việt Nam</h3>
                         <div class="time-filter" data-chart="ron95">
@@ -99,7 +98,7 @@
                     </div>
                     <canvas id="ron95Chart" style="display: block; width: 100%; height: 360px !important;"></canvas>
                 </div>
-                <div class="chart-container" style="position: relative; height: 420px;">
+                <div class="chart-container">
                     <div class="chart-inner-header">
                         <h3>Brent Crude Oil</h3>
                         <div class="time-filter" data-chart="brent">
