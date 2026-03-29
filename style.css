@@ -124,9 +124,10 @@ header p {
 
 #loadStatus {
     margin-top: 20px;
-    font-size: 0.9rem;
-    line-height: 1.6;
-    display: none;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    max-height: 200px;
+    overflow-y: auto;
 }
 
 /* Sections */
