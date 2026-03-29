@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Chart.js Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0"></script>
+    <style>
+        body { font-family: Arial; margin: 20px; background: #1f2937; color: white; }
+        .container { max-width: 800px; }
+        #canvas { max-width: 100%; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; background: #333; }
+        .ok { background: #10b981; }
+        .error { background: #ef4444; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Chart.js Rendering Test</h1>
+    <div id="status" class="status"></div>
+    <div class="container">
+        <canvas id="testCanvas"></canvas>
+    </div>
+
+    <script>
+        const status = document.getElementById('status');
+
+        function log(msg, isError = false) {
+            console.log(msg);
+            const className = isError ? 'error' : 'ok';
+            status.innerHTML += `<div class="${className}">${msg}</div>`;
+        }
+
+        log('[1] Page loaded, Chart.js version: ' + (typeof Chart !== 'undefined' ? 'OK' : 'NOT LOADED'));
+
+        if (typeof Chart === 'undefined') {
+            log('[ERROR] Chart.js failed to load from CDN!', true);
+        } else {
+            try {
+                const canvas = document.getElementById('testCanvas');
+                log('[2] Canvas element found: ' + (canvas ? 'YES' : 'NO'));
+
+                const ctx = canvas.getContext('2d');
+                log('[3] Canvas 2D context: ' + (ctx ? 'OK' : 'FAILED'), true);
+
+                const chart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                        datasets: [{
+                            label: 'Test Data',
+                            data: [12, 19, 3, 5, 2, 3],
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false
+                    }
+                });
+
+                log('[4] Chart created: SUCCESS ✓');
+                canvas.style.height = '400px';
+
+            } catch (error) {
+                log('[ERROR] Exception: ' + error.message, true);
+                console.error(error);
+            }
+        }
+    </script>
+</body>
+</html>
