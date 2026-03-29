@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Simple Chart Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0"></script>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        #log { background: #f0f0f0; padding: 10px; margin: 20px 0; border-radius: 5px; max-height: 300px; overflow-y: auto; }
+        .ok { color: green; }
+        .error { color: red; }
+        canvas { max-width: 800px; }
+    </style>
+</head>
+<body>
+    <h1>Simple Chart Test</h1>
+    <div id="log"></div>
+    <canvas id="testChart"></canvas>
+
+    <script>
+        const log = document.getElementById('log');
+
+        function addLog(msg, isError = false) {
+            const span = document.createElement('div');
+            span.className = isError ? 'error' : 'ok';
+            span.textContent = msg;
+            log.appendChild(span);
+            console.log(msg);
+        }
+
+        // Test 1: Chart.js loaded
+        if (typeof Chart !== 'undefined') {
+            addLog('[✓] Chart.js loaded successfully');
+        } else {
+            addLog('[✗] Chart.js NOT loaded', true);
+        }
+
+        // Test 2: Try to fetch data
+        async function test() {
+            try {
+                addLog('[→] Fetching interest_rates.json...');
+                const resp = await fetch('./data/interest_rates.json');
+                addLog(`[→] Response status: ${resp.status}`);
+
+                if (!resp.ok) {
+                    throw new Error(`HTTP ${resp.status}`);
+                }
+
+                const data = await resp.json();
+                addLog(`[✓] Data loaded: ${Object.keys(data).length} series`);
+
+                const keys = Object.keys(data);
+                addLog(`[→] Keys: ${keys.join(', ')}`);
+
+                // Get first series
+                const firstKey = keys[0];
+                const series = data[firstKey];
+                addLog(`[→] First series "${firstKey}": ${series.data.length} points`);
+
+                // Create simple chart
+                const canvas = document.getElementById('testChart');
+                const ctx = canvas.getContext('2d');
+
+                const chartData = {
+                    labels: series.data.map(d => d.date).slice(-12),
+                    datasets: [{
+                        label: series.label,
+                        data: series.data.map(d => d.value).slice(-12),
+                        borderColor: '#0891b2',
+                        backgroundColor: 'rgba(8, 145, 178, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                };
+
+                const chart = new Chart(ctx, {
+                    type: 'line',
+                    data: chartData,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: { display: true, position: 'top' }
+                        }
+                    }
+                });
+
+                addLog('[✓] Chart created successfully!');
+
+            } catch (error) {
+                addLog(`[✗] Error: ${error.message}`, true);
+                console.error(error);
+            }
+        }
+
+        // Run test when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', test);
+        } else {
+            test();
+        }
+    </script>
+</body>
+</html>
