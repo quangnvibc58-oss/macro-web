@@ -179,12 +179,27 @@
             try {
                 const canvas = document.getElementById(canvasId);
                 if (!canvas) {
+                    console.error(`[ERROR] Canvas ${canvasId} not found`);
                     updateStatus(`[ERROR] Canvas ${canvasId} not found`, true);
                     return null;
                 }
 
+                // Validate Chart library is loaded
+                if (typeof Chart === 'undefined') {
+                    console.error('[ERROR] Chart.js not loaded');
+                    updateStatus('[ERROR] Chart.js library not loaded', true);
+                    return null;
+                }
+
                 const ctx = canvas.getContext('2d');
+                if (!ctx) {
+                    console.error(`[ERROR] Cannot get 2d context for ${canvasId}`);
+                    updateStatus(`[ERROR] Cannot get canvas context for ${canvasId}`, true);
+                    return null;
+                }
+
                 const chartHeight = canvas.parentElement.offsetHeight || 420;
+                console.log(`[DEBUG] Creating chart ${canvasId} with ${seriesList.length} series`);
 
                 const datasets = seriesList.map(s => ({
                     label: s.label,
@@ -256,7 +271,11 @@
                         }
                     }
                 });
+
+                console.log(`[SUCCESS] Chart ${canvasId} created successfully with ${datasets.length} datasets`);
+                return chart;
             } catch (error) {
+                console.error(`[EXCEPTION] Chart creation error for ${canvasId}:`, error);
                 updateStatus(`[ERROR] Chart error for ${canvasId}: ${error.message}`, true);
                 return null;
             }
@@ -301,6 +320,8 @@
         }
 
         async function initCharts() {
+            console.log('[INIT] Dashboard initialization started');
+            console.log('[INIT] Chart.js version:', typeof Chart !== 'undefined' ? 'Loaded' : 'NOT LOADED');
             updateStatus('Dashboard initializing...');
 
             // Interest Rates
