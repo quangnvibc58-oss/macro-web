@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Test Data Loading</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #f5f5f5; }
+        .result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .ok { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h1>Test Data Loading</h1>
+    <div id="results"></div>
+
+    <script>
+        const resultsDiv = document.getElementById('results');
+
+        async function testFetch(filename) {
+            try {
+                const resp = await fetch(`./data/${filename}`);
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                const data = await resp.json();
+                const keys = Object.keys(data);
+                const msg = `✓ ${filename}: OK (${keys.length} series)`;
+                resultsDiv.innerHTML += `<div class="result ok">${msg}</div>`;
+                console.log(msg, data);
+            } catch (error) {
+                const msg = `✗ ${filename}: ${error.message}`;
+                resultsDiv.innerHTML += `<div class="result error">${msg}</div>`;
+                console.error(msg);
+            }
+        }
+
+        resultsDiv.innerHTML = '<div class="result">Testing data file access...</div>';
+
+        testFetch('interest_rates.json');
+        testFetch('exchange_rates.json');
+        testFetch('gold_prices.json');
+        testFetch('fuel_prices.json');
+    </script>
+</body>
+</html>
