@@ -41,7 +41,43 @@ jobs:
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
         run: |
           cd scrapers
-          python run_all.py
+          python run_all.py 2>&1 | tee scraper.log
+          if [ ${PIPESTATUS[0]} -ne 0 ]; then
+            echo "Scraper failed!"
+            exit 1
+          fi
+
+      - name: Verify generated data
+        run: |
+          echo "Verifying generated data files..."
+          python3 << 'VERIFY_EOF'
+          import json
+          from pathlib import Path
+
+          data_dir = Path('data')
+          files = ['interest_rates.json', 'exchange_rates.json', 'gold_prices.json', 'fuel_prices.json']
+
+          all_valid = True
+          for fname in files:
+            fpath = data_dir / fname
+            if not fpath.exists():
+              print(f"[ERROR] Missing: {fname}")
+              all_valid = False
+              continue
+
+            try:
+              with open(fpath) as f:
+                data = json.load(f)
+              total_points = sum(len(v.get('data', [])) for v in data.values() if isinstance(v, dict))
+              print(f"[OK] {fname}: {len(data)} series, {total_points} points total")
+            except Exception as e:
+              print(f"[ERROR] Invalid {fname}: {e}")
+              all_valid = False
+
+          if not all_valid:
+            exit(1)
+          print("\nAll data files verified successfully!")
+          VERIFY_EOF
 
       - name: Commit and push changes
         run: |
