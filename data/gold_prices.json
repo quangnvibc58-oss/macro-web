@@ -254,7 +254,7 @@
     ]
   },
   "world_gold": {
-    "label": "World Gold Spot Price (Monthly)",
+    "label": "World Gold Spot Price (Futures)",
     "unit": "USD/oz",
     "data": [
       {

@@ -47,16 +47,30 @@ async function loadData(filename) {
 function filterDataByDays(data, days) {
     if (days === Infinity) return data;
 
-    // If data has fewer points than days requested, show all
-    if (data.length <= days) return data;
+    // For "Ngày" (day) filter with daily data: return last 180 points
+    // For "Tuần" (week): return last 144 weeks * 7 = 1008 days
+    // For "Tháng" (month): return last 60 months * 30 = 1800 days
 
-    // For daily data, slice the last N points
-    // For historical data, calculate cutoff date
+    // If we have very few points (monthly data), show proportionally more
+    if (data.length < 50) {
+        // For monthly/quarterly data, show last N*2 points (more coverage)
+        const pointsToShow = Math.max(24, Math.floor(data.length * 0.4));
+        return data.slice(-pointsToShow);
+    }
+
+    // For daily data, calculate date cutoff
     const today = new Date();
     const cutoffDate = new Date(today.getTime() - days * 24 * 60 * 60 * 1000);
     const cutoffStr = cutoffDate.toISOString().split('T')[0];
 
-    return data.filter(item => item.date >= cutoffStr);
+    const filtered = data.filter(item => item.date >= cutoffStr);
+
+    // Ensure we show at least some data even for sparse datasets
+    if (filtered.length === 0 && data.length > 0) {
+        return data.slice(-Math.max(12, Math.floor(data.length * 0.3)));
+    }
+
+    return filtered;
 }
 
 /**
