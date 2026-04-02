@@ -13,8 +13,8 @@ import time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from fred_scraper import scrape_all_fred_series
-from boj_scraper import scrape_boj
-from boe_scraper import scrape_boe
+from boj_alternative_scraper import scrape_boj
+from boe_alternative_scraper import scrape_boe
 from exchange_rate_scraper import scrape_exchange_rates
 from gold_fuel_scraper import scrape_gold_fuel
 
