@@ -206,9 +206,9 @@ header p {
 /* Chart container */
 .chart-container {
     position: relative;
-    height: 420px;
+    height: auto;
     margin-bottom: 20px;
-    padding: 24px;
+    padding: 16px;
     background: linear-gradient(135deg, var(--bg-light) 0%, var(--bg-card) 100%);
     border-radius: 10px;
     border: 1px solid var(--border-color);
@@ -245,13 +245,14 @@ header p {
 }
 
 .charts-row .chart-container {
-    height: 420px;
+    height: auto;
     margin-bottom: 0;
 }
 
 .chart-container canvas {
-    max-height: 100%;
     display: block;
+    width: 100% !important;
+    height: 400px !important;
 }
 
 /* Responsive */
